@@ -1,0 +1,415 @@
+
+// Create a global variables
+import processing.video.*;
+int currentFrame = -1;
+String fileName = null;
+
+Maxim maxim;
+AudioPlayer player;
+int ratioFS = 1;
+float power=0;
+float threshold = 0.35; // vary this until the square appears on the beats
+int wait = 0;
+boolean playit = false;
+Movie myMovie;
+float go;
+int elements = 20;// This is the number of points and lines we will calculate at once. 1000 is alot actually. 
+
+boolean playButton = false;
+boolean stopButton = false;
+boolean pauseButton = false;
+boolean fastButton = false;
+boolean slowButton = false;
+boolean openButton = false;
+boolean beatButton = false;
+boolean colorButton = false;
+boolean sonicButton = false;
+void setup()
+{  
+  // load the image  from file
+  //img = loadImage("PControl6.jpg");
+
+  size(650, 550);
+  frameRate(25); // this is the framerate. Tweak for performance.
+  maxim = new Maxim(this);
+  player = maxim.loadFile("mykbeat.wav");
+  player.setAnalysing(true);
+  player.setLooping(true);
+}
+
+void draw()
+{
+  background(128); 
+  if(myMovie != null)
+  {
+    image(myMovie, 0, 0, width, map(myMovie.height, 0, myMovie.width, 0,width));
+    noLoop();
+    currentFrame++;
+  }
+  // Drawing Audio Visualisation Buttons
+  if (colorButton == true) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  rect(width/2, 25, 25, 25);
+  
+  if (beatButton == true) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  rect(width/2 +35, 25, 25, 25);
+  
+  if (sonicButton == true)
+  {
+    fill(255);
+  } 
+  else
+  {
+    noFill();
+  }
+  rect(width/2 -35, 25, 25, 25);
+  
+  // Drawing Media player controls icons
+  if (fastButton == true) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  rect(width / 2 + 110, height - 50, 60, 45);
+  line(width / 2 + 130, height - 32, width / 2 + 130, height - 22);
+  line(width / 2 + 130, height - 32, width / 2 + 142, height - 27);
+  line(width / 2 + 130, height - 22, width / 2 + 142, height - 27);
+  
+  line(width / 2 + 145, height - 32, width / 2 + 145, height - 22);
+  line(width / 2 + 145, height - 32, width / 2 + 157, height - 27);
+  line(width / 2 + 145, height - 22, width / 2 + 157, height - 27);
+  
+
+  if (pauseButton == true) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  rect(width / 2 + 40, height - 50, 60, 45);
+  line(width / 2 + 67, height - 32, width / 2 + 67, height - 22);
+  line(width / 2 + 72, height - 32, width / 2 + 72, height - 22);
+
+ if (playButton == true) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  rect(width / 2 - 30, height - 50, 60, 45);
+  line(width / 2 - 5, height - 32, width / 2 - 5, height - 22);
+  line(width / 2 - 5, height - 32, width / 2 + 7, height - 27);
+  line(width / 2 - 5, height - 22, width / 2 + 7, height - 27);
+  
+if (openButton == true) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  rect(width - 70, 10, 60, 45);
+  line(width - 45, 25, width - 35,  25);
+  line(width - 45, 40, width - 35,  40);
+  line(width - 45, 40, width - 40,  30);
+  line(width - 35, 40, width - 40,  30);
+  
+  if (stopButton == true) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  rect(width / 2 - 100, height - 50, 60, 45);
+  rect(width / 2 - 75, height - 32, 10, 10);
+    
+  if (slowButton == true) {
+    fill(255);
+  } else {
+    noFill();
+  }
+  rect(width / 2 - 170, height - 50, 60, 45);
+  line(width / 2 - 140, height - 32, width / 2 - 140, height - 22);
+  line(width / 2 - 140, height - 32, width / 2 - 152, height - 27);
+  line(width / 2 - 140, height - 22, width / 2 - 152, height - 27);
+  
+  line(width / 2 - 125, height - 32, width / 2 - 125, height - 22);
+  line(width / 2 - 125, height - 32, width / 2 - 138, height - 27);
+  line(width / 2 - 125, height - 22, width / 2 - 138, height - 27);  
+  
+  // adjasting game speed with the mouse movement
+  float ratio = (float) mouseX / (float) width;
+  ratio *= 2;
+  float speed = player.speed(ratio);
+  
+  // displaying speed speed on screen
+  //float txtSpeed = player.speed(ratio);
+  float len = player.getLengthMs();
+  int lenMS = player.getLength();
+  text("Player length (Ms): " + len, 10, 15);
+  //text("Player length:          " + lenMS, 10, 30);
+  text("Player speed on screen: " + speed, 10, 40);
+  text(mouseX +" , "+ mouseY, mouseX, mouseY);
+  if (colorButton)
+  {
+    colorVisualisation();
+  }
+  else if(beatButton)
+  {
+    beatDetection();
+  }
+}
+
+void mousePressed()
+{
+  if (playButton) 
+  { 
+     checkButtons();
+  } 
+  else if (stopButton)
+  {
+     checkButtons();
+  }
+  else if (pauseButton)
+  {
+     checkButtons();
+  }
+  else if (fastButton)
+  {
+     checkButtons();
+  }
+  else if (slowButton) 
+  {
+     checkButtons();
+  }
+  else if (openButton) 
+  {
+     checkButtons();
+  }
+  else if (colorButton) 
+  {
+     checkButtons();
+  }
+  else if (beatButton) 
+  {
+     checkButtons();
+  }
+  else if (sonicButton) 
+  {
+     checkButtons();
+  }
+}
+void mouseMoved() { 
+if (mouseX > 225 && mouseX < 285 && mouseY >500 && mouseY < 545) 
+  {
+    stopButton = true;
+  }
+  else if (mouseX > 295 && mouseX < 355 && mouseY > 500 && mouseY < 545) 
+  {
+    playButton = true;
+  }
+  else if (mouseX > 365 && mouseX < 425 && mouseY > 500 && mouseY < 545) 
+  {
+    pauseButton = true;
+  }
+  else if (mouseX > 155 && mouseX < 215 && mouseY > 500 && mouseY < 545) 
+  {
+    slowButton = true;
+  }
+  else if (mouseX > 435 && mouseX < 495 && mouseY > 500 && mouseY < 545) 
+  {
+    fastButton = true;
+  }
+  else if (mouseX > 580 && mouseX < 640 && mouseY > 10 && mouseY < 55) 
+  {
+    openButton = true;
+  }  
+  else if (mouseX > 325 && mouseX < 350 && mouseY > 25 && mouseY < 50) 
+  {
+    colorButton = true;
+    beatButton = false; 
+    sonicButton = false; 
+    colorVisualisation();
+  }
+  else if (mouseX > 360 && mouseX < 385 && mouseY > 25 && mouseY < 50) 
+  {
+    beatButton = true;  
+    colorButton = false;
+    sonicButton = false;
+    beatDetection();
+  }
+  else if (mouseX > 290 && mouseX < 315 && mouseY > 25 && mouseY < 50) 
+  {
+    sonicButton = true;
+    beatButton = false;  
+    colorButton = false;
+    beatDetection();
+  }
+  else 
+  {
+    playButton = stopButton = pauseButton = slowButton = fastButton = openButton = false;
+  }
+}
+
+void mouseDragged() 
+{
+     //checkButtons(); 
+     if (sonicButton)
+     {
+     sonicPainter();
+     }
+}
+
+void checkButtons() {
+  if (mouseX > 225 && mouseX < 285 && mouseY >500 && mouseY < 545) 
+  {
+    stopButton = true;
+    player.cue(0);
+    player.stop();
+    playit = false;
+
+  }
+  else if (mouseX > 295 && mouseX < 355 && mouseY > 500 && mouseY < 545) 
+  {
+    playButton = true;
+    player.play();
+    playit = true;
+  }
+  else if (mouseX > 365 && mouseX < 425 && mouseY > 500 && mouseY < 545) 
+  {
+    pauseButton = true;
+    player.stop();
+    playit = false;
+  }
+  else if (mouseX > 155 && mouseX < 215 && mouseY > 500 && mouseY < 545) 
+  {
+    slowButton = true;
+    ratioFS -= 1;
+    player.speed(ratioFS);
+  }
+  else if (mouseX > 435 && mouseX < 495 && mouseY > 500 && mouseY < 545) 
+  {
+    fastButton = true;    
+    ratioFS += 1;
+    player.speed(ratioFS);    
+  }
+  else if (mouseX > 580 && mouseX < 640 && mouseY > 10 && mouseY < 55) 
+  {
+   openButton = true;
+   selectInput("Select a file to process:", "fileSelected");
+   //myMovie = new Movie(this, "/Users/marco/Movies/drawing.mov");
+   noLoop();  
+  }  
+  else if (mouseX > 325 && mouseX < 350 && mouseY > 25 && mouseY < 50) 
+  {
+    colorButton = true;
+    beatButton = false; 
+    sonicButton = false; 
+    colorVisualisation();
+  }
+  else if (mouseX > 360 && mouseX < 385 && mouseY > 25 && mouseY < 50) 
+  {
+    beatButton = true;  
+    colorButton = false;
+    sonicButton = false;
+    beatDetection();
+  }
+  else if (mouseX > 290 && mouseX < 315 && mouseY > 25 && mouseY < 50) 
+  {
+    sonicButton = true;
+    beatButton = false;  
+    colorButton = false;
+    beatDetection();
+  }
+  else 
+  {
+    playButton = stopButton = pauseButton = slowButton = fastButton = openButton = false;
+  }
+}
+// Function for file select
+void fileSelected(File selection) {
+  if (selection == null) {
+    println("Window was closed or the user hit cancel.");
+  } else {
+    println("User selected " + selection.getAbsolutePath());
+    myMovie = new Movie(this, selection.getAbsolutePath());
+    myMovie.play();
+  }
+}
+
+// Called every time a new frame is available to read
+void movieEvent(Movie m) {
+  m.read();
+  fileName = "movie" + currentFrame + ".jpg";
+  loop();
+//  if (currentFrame >=0) {
+  saveFrame(fileName);
+//  }
+  noLoop();
+}
+
+void beatDetection()
+{
+ if (playit) {
+    text("Beat Detection Visualisation: ", width / 2 - 55, 15);
+    println(wait);  
+    fill(255);
+    power = player.getAveragePower(); 
+    ellipse(width/2,height/2,power*500,power*500);
+    if (power>threshold && wait < 0) {
+    noFill(); 
+    ellipse(width/2,height/2,power*500,power*500);
+    wait=4;
+  }
+  wait--;
+  }
+} 
+
+void colorVisualisation()
+{
+
+  if (playit) {
+    //rectMode(CENTER);
+    text("Colur Visualisation: ", width / 2 - 40, 15);
+    colorMode(HSB);
+    float power = player.getAveragePower();
+    go+=power*50;
+    translate(width/2, height/2);// we translate the whole sketch to the centre of the screen, so 0,0 is in the middle.
+    for (int i = elements; i > 0;i--) {
+      noStroke();
+      fill((10*i+go)%255, power*512, 255); // this for loop calculates the x and y position for each node in the system and draws a line between it and the next.
+      //ellipse((mouseX-(width/2))*(elements-i)/elements, (mouseY-(height/2))*(elements-i)/elements, width*1.5/elements*i, height*1.5/elements*i);
+      ellipse((width/2-(width/2))*(elements-i)/elements, (height/2-(height/2))*(elements-i)/elements, width/elements*i, height-150/elements*i-100);
+  stroke(1);
+  }
+  }
+}
+
+void sonicPainter()
+{
+  text("Sonic Painter Destop: ", width / 2 - 55, 15);
+  float red = map(mouseX, 0, width, 0, 255);
+  float blue = map(mouseY, 0, width, 0, 255);
+  float green = dist(mouseX,mouseY,width/2,height/2);
+  
+  float speed = dist(pmouseX, pmouseY, mouseX, mouseY);
+  float alpha = map(speed, 0, 20, 0, 10);
+  float lineWidth = map(speed, 0, 10, 10, 1);
+  lineWidth = constrain(lineWidth, 0, 10);
+    
+  stroke(red, green, blue, 255);
+  strokeWeight(lineWidth);
+  line(pmouseX, pmouseY,mouseX, mouseY);
+  //brush1(mouseX, mouseY,speed, speed,lineWidth);
+  //brush2(mouseX, mouseY,speed, speed,lineWidth);
+  //brush3(mouseX, mouseY,speed, speed,lineWidth);
+  //brush4(pmouseX, pmouseY,mouseX, mouseY,lineWidth);
+  //brush5(pmouseX, pmouseY,mouseX, mouseY,lineWidth);
+  //brush6(mouseX, mouseY,speed, speed,lineWidth);
+  //brush7(pmouseX, pmouseY,mouseX, mouseY,lineWidth);
+  strokeWeight(1);
+  stroke(0);
+  
+}
